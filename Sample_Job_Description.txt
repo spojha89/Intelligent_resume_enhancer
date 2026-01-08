@@ -1,0 +1,26 @@
+Full job description
+The Opportunity
+This is an exciting time at Enigma. We're on the cusp of releasing our next generation of small business intelligence products built on years of learnings in the space. We are seeking an experienced Senior Data Engineer to join our team and help shape the trajectory of these products. Your work will directly impact the accuracy, scalability, and predictive capabilities of our data platform, influencing key business decisions for our customers.
+
+The Role
+As a Senior Data Engineer, you will be responsible for designing, building, and maintaining our core small business data product. You will collaborate with cross-functional teams to build out new product capabilities starting from raw source data, through scalable data pipelines and models to the customer interface. We embrace customer focus and end-to-end ownership so your impact will be measured by the value we deliver and the technical quality and maintainability of our product.
+
+What You'll Do
+Understand the unmet needs of our customers and create capabilities to address these. This usually involves a process of exploring data, prototyping, and evaluation, followed by the build of robust and maintainable data pipelines.
+Engineer scalable and maintainable data systems that tell the story of millions of U.S. small businesses (we use Databricks SQL, PySpark, and MLFlow).
+You'll be building on top of our innovative data infrastructure that's designed for iteration and experimentation (uses Dagster for orchestration and LakeFS for data versioning).
+Apply a data-focused, first-principles approach to problem solving. We value candidates who bias towards simple and elegant solutions but have the capability to implement state-of-the-art models and techniques when required.
+Inspire your teammates to perform at their best while fostering a collaborative, supportive team culture.
+What Makes This Role Exciting?
+Ownership and Impact: Work directly with customers and internal teams to build product capabilities in an environment of high-trust and responsibility.
+Technical Challenge: Tackle complex data and engineering problems, balancing speed of innovation with scalability and reliability.
+Learning: Work on unique, high-impact data challenges that require creative problem-solving and cutting-edge techniques.
+Our Ideal Candidate
+Must have 5+ years of engineering or data science experience, including 3+ years working on distributed data systems.
+Has practical experience extracting value from data in a creative way to deliver customer impact.
+Cares deeply about creating value and wants to learn, ship, and iterate quickly.
+Strong collaboration skills and a desire to work in a cross-functional environment.
+A principled, metrics-driven approach to solving complex data problems.
+Bonus Points If You
+Have built data products in the entity resolution, sales, marketing, KYB, or credit underwriting space.
+Prior experience in Python, Spark and Databricks.

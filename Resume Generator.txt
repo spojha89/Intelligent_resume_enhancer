@@ -1,0 +1,107 @@
+Resume Generator-
+
+Tools-
+Lambda, OpenSearch, S3, Bedrock models, FastAPI
+
+Implementation:
+
+1. Ingestion of current resume and job description to OpenSearch
+2. Use bedrock models to generate resume 
+3. Extract to S3
+
+Component usage:
+-> Lambda to ask to Upload resume and job description to S3
+→ Lambda (Extract Requirements + Generate Query Embedding+ Load to OpenSearch)
+-> Lambda extract current resume contents + Generate Query Embedding+ Load to OpenSearch
+-> Lambda to use bedrock model to find matching probability of resume as per job description
+→ Lambda (Call Bedrock with Context) and call OpenSearch (Retrieve Relevant Experiences)
+→ Lambda to generate customized resume using Bedrock Claude
+→ Lambda to generate report in format as PDF/DOCX to S3
+-> Step function to orchestrate between lambda functions 
+
+Architecture-
+User
+ └── Upload Resume + JD
+       ↓
+S3 (Raw Files) --> done 
+       ↓
+Step Functions Orchestrator
+ ├── Lambda 1: Parse Resume (sections, bullets)
+ │      └── Generate embeddings → OpenSearch
+ │
+ ├── Lambda 2: Parse JD + Extract Requirements
+ │      └── Generate JD query embedding (NO storage)
+ │
+ ├── Lambda 3: Matching & Scoring
+ │      ├── Vector similarity
+ │      ├── Skill overlap
+ │      └── Produce match score
+ │
+ ├── Lambda 4: Context Retrieval
+ │      └── OpenSearch kNN using JD embedding
+ │
+ ├── Lambda 5: Resume Rewrite (Claude)
+ │      └── Section-wise generation
+ │
+ ├── Lambda 6: Verification / Guardrails (optional)
+ │
+ ├── Lambda 7: PDF/DOCX Generator
+ │      └── Upload final resume to S3
+ │
+ └── Persist metadata (DynamoDB)
+
+
+Upload to S3-
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"upload_url\": \"https://suvus3bucket.s3.amazonaws.com/description/20260107_174628_Sample_Job_Description.txt?AWSAccessKeyId=ASIA4LINHOHH3OXAVZFK&Signature=0Y6C8MnflWQmpR5LKVlCPzuwp60%3D&content-type=text%2Fplain&x-amz-security-token=IQoJb3JpZ2luX2VjELL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIFPH3K1M98t6akUSnDWljz5ysbCuHurtJMg4LLli999nAiEAm0CLbYdB1unhtS1UjScLnwdzQ05LMKIFPeguvxrfqZUq8AIIexACGgw4NDg4MjA2NjI3MzUiDPZ4FJBHCzicpGr0hyrNAmqqQRL0PfFGbV6pbynoOU0gLiG4hhJ9%2Bdbc4bnWnQqyXhpmAnewfU7XTS03J%2FVihdAEke4DbSCepYQ8aYGlVcRsP9ATTRFe9d0vAAUaeE%2FYmtFhAMaR1x3A5OED%2BsPmDFlLZnrC3SmY7u1Tu23s6tt3SavNHBsF2F1uVbzCuY5h6QRLkGT8L5YEzW7NYeNmMZHTX%2BDdWcmEkOU1rThpbq3K%2BIyZJ5F%2Fp3yW2mc5e1GkG7Qleb3mTKuFEotGTrEE9MDLrz%2FFfQojDjDvUCwtWoNIjbPHGJ1lMG%2B5BtxZiWO97stAYDy6DhYz%2FNIQvl4kU5nf0xiXoNxKcFb0jm9wvxQnpd4GuWkwMbkVexM7y1EVW4CHKO1tbhKGoH49husxRttfgCPZ0V6HP9A8jZrN31rRW7B%2BajkTgyqQEFZtxhbuH68ouqDgvCb2VjSKYzDzt%2FrKBjqeAXEcxgWbObQ1B02hCQozTXvVKBhCaN7sQxAyOH%2FpVkcTA9D7IbKllSvABMrJJNIHzTX1QpsuSazfeXlitDMOvy74K3RXgbibfYf78aPPtIzDcIl9evCnFlDIpvQh2fT79OqAfyItKUlds3XQY0YKfo26iuR%2FYvr%2Fld%2B6au1fSOn1rIZ7Kurd%2BM4udrvuhSUyX0%2BjT4nT3Yp6GY6NjviB&Expires=1767811588\", \"s3_key\": \"description/20260107_174628_Sample_Job_Description.txt\", \"bucket\": \"suvus3bucket\", \"content_type\": \"text/plain\"}"
+}
+
+Resume:
+
+{
+  "body": "{\"action\":\"get_presigned_url\",\"file_type\":\"resume\",\"file_name\":\"Resume_Subhra_Ojha.pdf\",\"content_type\":\"application/pdf\"}"
+}
+
+
+START RequestId: 502f92f3-9926-4e55-b0fe-b8f590b9d53b Version: $LATEST
+Received event: {'body': '{"action":"get_presigned_url","file_type":"resume","file_name":"Resume_Subhra_Ojha.docx","content_type":"application/json"}'}
+Received body: {'action': 'get_presigned_url', 'file_type': 'resume', 'file_name': 'Resume_Subhra_Ojha.docx', 'content_type': 'application/json'}
+Received action: get_presigned_url
+Presigned URL: https://suvus3bucket.s3.amazonaws.com/resume/20260107_174815_Resume_Subhra_Ojha.docx?AWSAccessKeyId=ASIA4LINHOHH3OXAVZFK&Signature=ijdV1TwY7IxTsquTgUhdA4FHahc%3D&content-type=application%2Fjson&x-amz-security-token=IQoJb3JpZ2luX2VjELL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIFPH3K1M98t6akUSnDWljz5ysbCuHurtJMg4LLli999nAiEAm0CLbYdB1unhtS1UjScLnwdzQ05LMKIFPeguvxrfqZUq8AIIexACGgw4NDg4MjA2NjI3MzUiDPZ4FJBHCzicpGr0hyrNAmqqQRL0PfFGbV6pbynoOU0gLiG4hhJ9%2Bdbc4bnWnQqyXhpmAnewfU7XTS03J%2FVihdAEke4DbSCepYQ8aYGlVcRsP9ATTRFe9d0vAAUaeE%2FYmtFhAMaR1x3A5OED%2BsPmDFlLZnrC3SmY7u1Tu23s6tt3SavNHBsF2F1uVbzCuY5h6QRLkGT8L5YEzW7NYeNmMZHTX%2BDdWcmEkOU1rThpbq3K%2BIyZJ5F%2Fp3yW2mc5e1GkG7Qleb3mTKuFEotGTrEE9MDLrz%2FFfQojDjDvUCwtWoNIjbPHGJ1lMG%2B5BtxZiWO97stAYDy6DhYz%2FNIQvl4kU5nf0xiXoNxKcFb0jm9wvxQnpd4GuWkwMbkVexM7y1EVW4CHKO1tbhKGoH49husxRttfgCPZ0V6HP9A8jZrN31rRW7B%2BajkTgyqQEFZtxhbuH68ouqDgvCb2VjSKYzDzt%2FrKBjqeAXEcxgWbObQ1B02hCQozTXvVKBhCaN7sQxAyOH%2FpVkcTA9D7IbKllSvABMrJJNIHzTX1QpsuSazfeXlitDMOvy74K3RXgbibfYf78aPPtIzDcIl9evCnFlDIpvQh2fT79OqAfyItKUlds3XQY0YKfo26iuR%2FYvr%2Fld%2B6au1fSOn1rIZ7Kurd%2BM4udrvuhSUyX0%2BjT4nT3Yp6GY6NjviB&Expires=1767811695
+Bucket: suvus3bucket
+Key: resume/20260107_174815_Resume_Subhra_Ojha.docx
+Content-Type: application/json
+END RequestId: 502f92f3-9926-4e55-b0fe-b8f590b9d53b
+REPORT RequestId: 502f92f3-9926-4e55-b0fe-b8f590b9d53b	Duration: 27.45 ms	Billed Duration: 28 ms	Memory Size: 128 MB	Max Memory Used: 95 MB	
+
+
+curl -X PUT -H "Content-Type: application/json" --upload-file Resume_Subhra_Ojha.docx "https://suvus3bucket.s3.amazonaws.com/resume/20260107_174815_Resume_Subhra_Ojha.docx?AWSAccessKeyId=ASIA4LINHOHH3OXAVZFK&Signature=ijdV1TwY7IxTsquTgUhdA4FHahc%3D&content-type=application%2Fjson&x-amz-security-token=IQoJb3JpZ2luX2VjELL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIFPH3K1M98t6akUSnDWljz5ysbCuHurtJMg4LLli999nAiEAm0CLbYdB1unhtS1UjScLnwdzQ05LMKIFPeguvxrfqZUq8AIIexACGgw4NDg4MjA2NjI3MzUiDPZ4FJBHCzicpGr0hyrNAmqqQRL0PfFGbV6pbynoOU0gLiG4hhJ9%2Bdbc4bnWnQqyXhpmAnewfU7XTS03J%2FVihdAEke4DbSCepYQ8aYGlVcRsP9ATTRFe9d0vAAUaeE%2FYmtFhAMaR1x3A5OED%2BsPmDFlLZnrC3SmY7u1Tu23s6tt3SavNHBsF2F1uVbzCuY5h6QRLkGT8L5YEzW7NYeNmMZHTX%2BDdWcmEkOU1rThpbq3K%2BIyZJ5F%2Fp3yW2mc5e1GkG7Qleb3mTKuFEotGTrEE9MDLrz%2FFfQojDjDvUCwtWoNIjbPHGJ1lMG%2B5BtxZiWO97stAYDy6DhYz%2FNIQvl4kU5nf0xiXoNxKcFb0jm9wvxQnpd4GuWkwMbkVexM7y1EVW4CHKO1tbhKGoH49husxRttfgCPZ0V6HP9A8jZrN31rRW7B%2BajkTgyqQEFZtxhbuH68ouqDgvCb2VjSKYzDzt%2FrKBjqeAXEcxgWbObQ1B02hCQozTXvVKBhCaN7sQxAyOH%2FpVkcTA9D7IbKllSvABMrJJNIHzTX1QpsuSazfeXlitDMOvy74K3RXgbibfYf78aPPtIzDcIl9evCnFlDIpvQh2fT79OqAfyItKUlds3XQY0YKfo26iuR%2FYvr%2Fld%2B6au1fSOn1rIZ7Kurd%2BM4udrvuhSUyX0%2BjT4nT3Yp6GY6NjviB&Expires=1767811695"
+
+
+Job Description:
+
+ {
+        "body": "{\"action\":\"get_presigned_url\",\"file_type\":\"description\",\"file_name\":\"Sample_Job_Description.txt\",\"content_type\":\"text/plain\"}"
+      }
+
+
+curl -X PUT -H "Content-Type: text/plain" --upload-file Sample_Job_Description.txt "https://suvus3bucket.s3.amazonaws.com/description/20260105_032237_Sample_Job_Description.txt?AWSAccessKeyId=ASIA4LINHOHHQZF4C3TD&Signature=1RqllAF2vvyl11rT%2FxHH5BLTFEo%3D&content-type=text%2Fplain&x-amz-security-token=IQoJb3JpZ2luX2VjEHQaCXVzLWVhc3QtMSJIMEYCIQCVcs0I%2Bd5ryfZyK37V4JJ4AgekG8rjtVMcVLaizPisFAIhAMCCNn%2B%2BCa%2BGYEWq5QDxEbAHRi1YT%2Fxr3UCyagkvzzFPKvACCD0QAhoMODQ4ODIwNjYyNzM1IgxqbALLTXrKrJEJTIYqzQL8RYrhlcb1gxUQOFyyUojZSHr0swYxEdrnQn4gpUgjI8LB1pBd0UV39wtVLKUAFJJmaA0RHGr%2FsN1sc65vxi1lQtXW%2B9gwrPUP93pmPVCjirp8ZmxxUy9OBs2%2F830LfGiLegn3kazqsEIFxXKtowkZNQbkweegTJ8OGhTdNPvOnckU9IpB5BXs15HfY3DeoexZ%2FsCD0HmuJuncbbPGOe71EujCj7XACviTq5BIuDV8YA1tocvrflD%2B4KecJ9b5jZ09DucRjdKe4TQd701W6ZnMDKkPWFPRUfOXwCBD41VoWbw6EwQXnwXL5HkeQhnNA0KD8%2BwHiiT36Q9tzrUosU1tZ07zKj0iPT584Ev1PTpi1C6EzrDK%2BLi%2F6BXPdkkM4AEIBj5nExdCILWrKnhT2C9D9aEQnknWckV7Y42Qn3CM5jiW0FLm1x55i4xGxcEw%2FNzsygY6nQF02v0w8CvaDosy79pZixMbov5nsJuZ2O2DgrR4BPs4ll5rKWF3qp70LMDinltiDeUuv%2BgGTbBPceI%2B8uOFVi8KJ2xEi8F3N9015DXoFfs1CwdgB6s%2FVoC72UunCSAo5CbEFDN3V4xfE5uSWwC7y8YL4rFXLkyCYCcg%2BLrEhNmEnqjKTuiWdalv4L6dAbrxxtFZM1pjzU%2BZlz9cL6IQ&Expires=1767586957"
+
+Create Embedding & Upload to OpenSearch-
+
+Create lambda layer-
+aws lambda publish-layer-version \
+  --layer-name lxml-layer \
+  --zip-file fileb://lxml_python.zip \
+  --compatible-runtimes python3.11 \
+  --region us-east-1
+
+
+Lambda functions-
+ResumeUploadS3 --> CreateEmbeddingsLoadOpenSearch --> GenerateResume
+
